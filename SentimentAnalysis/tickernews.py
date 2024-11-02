@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from finvizfinance.quote import finvizfinance
 import csv
@@ -69,7 +70,10 @@ fieldNames = ['Category', 'Date', 'Title', 'Source', 'Link', 'Content', 'Sentime
 total_sentiment_score = 0
 num_articles = 0
 
-with open(f'{ticker}_news.csv', 'w', newline='') as csvfile:
+script_dir = os.path.dirname(os.path.abspath(__file__))
+csv_file_path = os.path.join(script_dir, f'{ticker}_news.csv')
+
+with open(csv_file_path, 'w', newline='') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=fieldNames)
     writer.writeheader()
     for index, row in news_df.iterrows():
