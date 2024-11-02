@@ -2,21 +2,13 @@ import pandas as pd
 from finvizfinance.quote import finvizfinance
 import csv
 import requests
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime
+from transformers import pipeline
 
-analyzer = SentimentIntensityAnalyzer()
+pipe = pipeline("text-classification", model="yiyanghkust/finbert-tone")
 
-# Expanded lists of positive and negative words with more impactful adjustments
-positive_words = [
-    'gain', 'profit', 'increase', 'growth', 'surge', 'rise', 'improvement', 
-    'record', 'high', 'success', 'win', 'benefit', 'advantage', 'boost', 'positive'
-]
-negative_words = [
-    'loss', 'decline', 'drop', 'fall', 'decrease', 'strike', 'plummet', 
-    'low', 'negative', 'fail', 'failure', 'risk', 'threat', 'downturn', 'crash'
-]
+todayWeight = 2
 
 def fetch_content(link):
     try:
@@ -32,44 +24,50 @@ def fetch_content(link):
         print(f"Error fetching content from {link}: {e}")
         return ""
 
-def calculate_weight(date_str):
-    try:
-        now = datetime.now()
-        if ':' in date_str:
-            date = datetime.strptime(date_str, '%I:%M%p').replace(year=now.year, month=now.month, day=now.day)
-        else:
-            date = datetime.strptime(date_str, '%b-%d').replace(year=now.year)
-            if date > now:
-                date = date.replace(year=now.year - 1)
-        delta = now - date
-        weight = 1 / (delta.total_seconds() + 1)
-        return weight
-    except Exception as e:
-        print(f"Error calculating weight for date {date_str}: {e}")
-        return 1
-
-def adjust_sentiment(content, sentiment):
-    words = content.split()
-    for word in words:
-        if word.lower() in positive_words:
-            sentiment += .7  # Increased impact for positive words
-        elif word.lower() in negative_words:
-            sentiment -= .7  # Increased impact for negative words
-    # Cap the sentiment score between -5 and 5
-    sentiment = max(min(sentiment, 5), -5)
-    return round(sentiment, 3)
+def open_for_analysis(article_text):
+    max_length = 512
+    chunks = [article_text[i:i + max_length] for i in range(0, len(article_text), max_length)]
+    
+    sentiment_scores = []
+    for chunk in chunks:
+        result = pipe(chunk)
+        print(f"Model output: {result}")
+        
+        sentiment_score = 0
+        if result[0]['label'].lower() == 'positive':
+            sentiment_score = result[0]['score']
+        elif result[0]['label'].lower() == 'negative':
+            sentiment_score = -result[0]['score']
+        
+        if sentiment_score != 0:
+            sentiment_scores.append(sentiment_score * 50 + 50)
+    
+    if sentiment_scores:
+        avg_sentiment_score = sum(sentiment_scores) / len(sentiment_scores)
+        return avg_sentiment_score
+    else:
+        return 0
 
 ticker = input("Enter the stock ticker symbol: ")
 
 stock = finvizfinance(ticker)
+stock_fundament = stock.ticker_fundament()
+company_name = stock_fundament.get('Company', None)
+
+if not company_name:
+    company_name = input("Enter the full name of the company: ")
+
+stock_description = stock.ticker_description()
+
+print(f"Company Name: {company_name}")
+print(f"Company Description: {stock_description}")
+
 news_df = stock.ticker_news()
 
-fieldNames = ['Category', 'Date', 'Title', 'Source', 'Link', 'Sentiment']
+fieldNames = ['Category', 'Date', 'Title', 'Source', 'Link', 'Content', 'Sentiment']
 
-total_sentiment = 0
-total_weighted_sentiment = 0
-total_weight = 0
-count = 0
+total_sentiment_score = 0
+num_articles = 0
 
 with open(f'{ticker}_news.csv', 'w', newline='') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=fieldNames)
@@ -85,32 +83,36 @@ with open(f'{ticker}_news.csv', 'w', newline='') as csvfile:
         print(f"Fetching content from: {link}")
         print(f"Content length: {content_length} characters")
         
-        sentiment = analyzer.polarity_scores(content)['compound']
-        sentiment = adjust_sentiment(content, sentiment)
-        print(f"Sentiment score: {sentiment}")
+        content_with_context = content
         
-        weight = calculate_weight(row['Date'])
-        weighted_sentiment = sentiment * weight
+        sentiment_score = open_for_analysis(content_with_context)
         
-        total_sentiment += sentiment
-        total_weighted_sentiment += weighted_sentiment
-        total_weight += weight
-        count += 1
+        if sentiment_score != 0:
+            article_date = datetime.strptime(str(row['Date']), '%Y-%m-%d %H:%M:%S').date()
+            if article_date == datetime.today().date():
+                print("This is a today's article.")
+                total_sentiment_score += sentiment_score * todayWeight
+                num_articles += todayWeight
+            else:
+                total_sentiment_score += sentiment_score
+                num_articles += 1
         
-        writer.writerow({
-            'Category': 'news',
-            'Date': row['Date'],
-            'Title': row['Title'],
-            'Source': row['Source'],
-            'Link': row['Link'],
-            'Sentiment': sentiment
-        })
-        print(f"Finished processing link: {link}\n")
+            writer.writerow({
+                'Category': 'news',
+                'Date': row['Date'].strftime('%Y-%m-%d %H:%M:%S'),
+                'Title': row['Title'],
+                'Source': row['Source'],
+                'Link': row['Link'],
+                'Content': content_with_context,
+                'Sentiment': sentiment_score
+            })
+        
+            print(f"Sentiment score for article: {sentiment_score}")
+            print(f"Finished processing link: {link}\n")
 
-if count > 0:
-    average_sentiment = round(total_sentiment / count, 3) + 5
-    weighted_average_sentiment = round(total_weighted_sentiment / total_weight, 3) + 5
-    print(f"Regular Average Sentiment Score: {average_sentiment} / 10")
-    print(f"Weighted Average Sentiment Score: {weighted_average_sentiment} / 10")
+if num_articles > 0:
+    avg_sentiment_score = total_sentiment_score / num_articles
 else:
-    print("No content to analyze.")
+    avg_sentiment_score = 0
+
+print(f"Average Sentiment Score: {avg_sentiment_score}")
