@@ -5,6 +5,7 @@ import os
 #ERRORS: WHEN 1m and 5d, the data is "insufficient" (only 5 data points??) -> looking at date only and not time?
 #ERRORS: When I have 15m for AMZN, it has a FLAT LINE??
 #use rsi to adjust extrapolation
+#are boll bands calculated using real or arteficial data? calculate boll bands arteficially for the extrapolated data
 
 tickerInput = input("ticker: ")
 possible_intervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
@@ -63,4 +64,4 @@ if df.empty or len(df) < 3:
     raise ValueError("Insufficient data fetched for the given interval and time frame.")
 
 import StockAnalysis.lstmModelFunc as lmf
-lmf.train_and_plot_lstm(f"G:\\Github\\VECTOR\\StockAnalysis\\{tickerInput}_hist.csv", start_date, end_date, window_size=3, learning_rate=0.001, epochs=500, ticker=tickerInput)
+lmf.train_and_plot_lstm(f"G:\\Github\\VECTOR\\StockAnalysis\\{tickerInput}_hist.csv", start_date, end_date, window_size=3, learning_rate=0.001, epochs=200, ticker=tickerInput)
