@@ -67,11 +67,12 @@ def get_stock_sentiment(ticker):
 
     total_sentiment_score = 0
     num_articles = 0
+    skipped_links = 0
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     csv_file_path = os.path.join(script_dir, f'{ticker}_news.csv')
 
-    with open(csv_file_path, 'w', newline='') as csvfile:
+    with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldNames)
         writer.writeheader()
         for index, row in news_df.iterrows():
@@ -98,15 +99,19 @@ def get_stock_sentiment(ticker):
                     total_sentiment_score += sentiment_score
                     num_articles += 1
             
-                writer.writerow({
-                    'Category': 'news',
-                    'Date': row['Date'].strftime('%Y-%m-%d %H:%M:%S'),
-                    'Title': row['Title'],
-                    'Source': row['Source'],
-                    'Link': row['Link'],
-                    'Content': content_with_context,
-                    'Sentiment': sentiment_score
-                })
+                try:
+                    writer.writerow({
+                        'Category': 'news',
+                        'Date': row['Date'].strftime('%Y-%m-%d %H:%M:%S'),
+                        'Title': row['Title'],
+                        'Source': row['Source'],
+                        'Link': row['Link'],
+                        'Content': content_with_context,
+                        'Sentiment': sentiment_score
+                    })
+                except UnicodeEncodeError:
+                    print(f"Skipping link due to encoding error: {link}")
+                    skipped_links += 1
             
                 print(f"Sentiment score for article: {sentiment_score}")
                 print(f"Finished processing link: {link}\n")
@@ -117,6 +122,7 @@ def get_stock_sentiment(ticker):
         avg_sentiment_score = 0
 
     print(f"Average Sentiment Score: {avg_sentiment_score}")
+    print(f"Skipped links: {skipped_links}")
     return int(avg_sentiment_score)
 
 # Example usage:

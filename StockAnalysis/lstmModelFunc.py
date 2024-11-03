@@ -59,7 +59,7 @@ def windowed_df_to_date_X_y(windowed_dataframe):
 
     return dates, X.astype(np.float32), Y.astype(np.float32)
 
-def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_size=3, learning_rate=0.001, epochs=100, sentiment_multiplier=1.0):
+def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_size=3, learning_rate=0.001, epochs=100, sentiment_multiplier=1):
     df = pd.read_csv(csv_file)
     df = df[["Date", "Close"]]
 
@@ -102,13 +102,9 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
 
     sentiment_score = get_stock_sentiment(ticker)
 
-    base_probabilities = [0.3, 0.2, 0.1, 0.05, 0.02, 0.01]
-    multipliers = [1, 2, 3, 4, 5, 6]
-
-    sentiment_factor = sentiment_score / 100 * sentiment_multiplier
-    probabilities = [p * (1 + sentiment_factor) if i < len(base_probabilities) // 2 else p * (1 - sentiment_factor) for i, p in enumerate(base_probabilities)]
-    probabilities = np.array(probabilities)
-    probabilities /= probabilities.sum()
+    historical_changes = np.diff(df['Close'])
+    std_change = np.std(historical_changes)
+    max_change = np.max(np.abs(historical_changes))
 
     extrapolated_dates = []
     extrapolated_predictions = []
@@ -121,9 +117,9 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
         else:
             next_prediction = model.predict(current_window).flatten()[0]
 
-            movement = np.random.choice(multipliers, p=probabilities)
-            direction = np.random.choice([1], p=[1]) if sentiment_score > 50 else np.random.choice([-1, 1])
-            next_prediction += direction * movement * np.std(test_predictions)
+            change = np.random.normal(0, std_change)
+            change = np.clip(change, -max_change, max_change)
+            next_prediction += change
 
         extrapolated_dates.append(dates_test[i])
         extrapolated_predictions.append(next_prediction)
@@ -147,3 +143,4 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
     plt.legend()
     plt.title(f"Sentiment: {sentiment_score}")
     plt.show()
+
