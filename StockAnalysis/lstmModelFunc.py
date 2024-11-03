@@ -61,6 +61,50 @@ def windowed_df_to_date_X_y(windowed_dataframe):
 
     return dates, X.astype(np.float32), Y.astype(np.float32)
 
+# def train_and_plot_lstm(csv_file, first_date_str, last_date_str, window_size=3, learning_rate=0.001, epochs=100):
+#     df = pd.read_csv(csv_file)
+#     df = df[["Date", "Close"]]
+
+#     df["Date"] = df["Date"].apply(str_to_datetime)
+#     df.index = df.pop("Date")
+
+#     windowed_df = df_to_windowed_df(df, first_date_str, last_date_str, n=window_size)
+#     dates, X, Y = windowed_df_to_date_X_y(windowed_df)
+#     print(dates.shape, X.shape, Y.shape)
+
+#     q_80 = int(len(dates) * .8)
+#     q_90 = int(len(dates) * .9)
+
+#     dates_train, X_train, y_train = dates[:q_80], X[:q_80], Y[:q_80]
+#     dates_val, X_val, y_val = dates[q_80:q_90], X[q_80:q_90], Y[q_80:q_90]
+#     dates_test, X_test, y_test = dates[q_90:], X[q_90:], Y[q_90:]
+
+#     model = Sequential([layers.Input((window_size, 1)),
+#                         layers.LSTM(64),
+#                         layers.Dense(32, activation='relu'),
+#                         layers.Dense(32, activation='relu'),
+#                         layers.Dense(1)])
+
+#     model.compile(loss='mse',
+#                   optimizer=Adam(learning_rate=learning_rate),
+#                   metrics=['mean_absolute_error'])
+
+#     model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs)
+
+#     train_predictions = model.predict(X_train).flatten()
+#     val_predictions = model.predict(X_val).flatten()
+#     test_predictions = model.predict(X_test).flatten()
+
+#     plt.figure(figsize=(14, 7))
+#     plt.plot(dates_train, train_predictions, label='Training Predictions')
+#     plt.plot(dates_train, y_train, label='Training Observations')
+#     plt.plot(dates_val, val_predictions, label='Validation Predictions')
+#     plt.plot(dates_val, y_val, label='Validation Observations')
+#     plt.plot(dates_test, test_predictions, label='Testing Predictions')
+#     plt.plot(dates_test, y_test, label='Testing Observations')
+#     plt.legend()
+#     plt.show()
+
 def train_and_plot_lstm(csv_file, first_date_str, last_date_str, window_size=3, learning_rate=0.001, epochs=100):
     df = pd.read_csv(csv_file)
     df = df[["Date", "Close"]]
@@ -102,8 +146,27 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, window_size=3, 
     plt.plot(dates_val, y_val, label='Validation Observations')
     plt.plot(dates_test, test_predictions, label='Testing Predictions')
     plt.plot(dates_test, y_test, label='Testing Observations')
+
+    #FOR THE EXTRAPOLATION MODEL, TRAIN USING OTHER DATA ASWELL (NOT JUST TRAINING DATA) -> RSI AT THAT TIME OR SMTH ELSE TO DETECT PATTERNS
+
+    # New section for extrapolating data
+    extrapolated_dates = []
+    extrapolated_predictions = []
+
+    # Start with the first three days of real data from the testing dataset
+    current_window = X_test[:1]
+
+    for i in range(len(dates_test)):
+        # Predict the next day
+        next_prediction = model.predict(current_window).flatten()[0]
+        extrapolated_dates.append(dates_test[i])
+        extrapolated_predictions.append(next_prediction)
+
+        # Update the window with the new prediction
+        next_prediction_reshaped = np.array([[next_prediction]]).reshape((1, 1, 1))
+        new_window = np.append(current_window[:, 1:], next_prediction_reshaped, axis=1)
+        current_window = new_window
+
+    plt.plot(extrapolated_dates, extrapolated_predictions, label='Extrapolated Predictions', linestyle='dashed')
     plt.legend()
     plt.show()
-
-# Example of calling the function
-#train_and_plot_lstm("G:\\Github\\VECTOR\\StockAnalysis\\NVDA_hist.csv", '2023-11-07', '2024-11-01', window_size=3, learning_rate=0.001, epochs=100)

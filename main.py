@@ -2,6 +2,9 @@ import StockAnalysis.tickerFetch as tkf
 import pandas as pd
 import os
 
+#ERRORS: WHEN 1m and 5d, the data is "insufficient" (only 5 data points??) -> looking at date only and not time?
+#ERRORS: When I have 15m for AMZN, it has a FLAT LINE??
+
 tickerInput = input("ticker: ")
 possible_intervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
 print(f"Possible interval values: {possible_intervals}")
@@ -32,7 +35,6 @@ timeFrameInput = input("time frame: ")
 
 tkf.tickerFetch(tickerInput, timeFrameInput, intervalInput)
 
-# Change the first column head from 'Datetime' to 'Date' if it is 'Datetime'
 csv_file_path = f'{tickerInput}_hist.csv'
 csv_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "StockAnalysis", csv_file_path)
 df = pd.read_csv(csv_file_path)
@@ -41,7 +43,6 @@ if df.columns[0] == 'Datetime':
     df.rename(columns={'Datetime': 'Date'}, inplace=True)
     df.to_csv(csv_file_path, index=False)
 
-# Reload the CSV file after renaming the column
 df = pd.read_csv(csv_file_path)
 
 if len(df) < 3:
@@ -50,6 +51,8 @@ if len(df) < 3:
 start_date = df.iloc[3]['Date']
 end_date = df.iloc[-1]['Date']
 
-# Import the function here to avoid circular import
+if df.empty or len(df) < 3:
+    raise ValueError("Insufficient data fetched for the given interval and time frame.")
+
 import StockAnalysis.lstmModelFunc as lmf
 lmf.train_and_plot_lstm(f"G:\\Github\\VECTOR\\StockAnalysis\\{tickerInput}_hist.csv", start_date, end_date, window_size=3, learning_rate=0.001, epochs=500)
