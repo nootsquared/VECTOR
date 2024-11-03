@@ -8,8 +8,15 @@ import os
 
 tickerInput = input("ticker: ")
 possible_intervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
-print(f"Possible interval values: {possible_intervals}")
-intervalInput = input("interval: ")
+disabled_intervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h']
+
+while True:
+    print(f"Possible interval values: {possible_intervals}")
+    intervalInput = input("interval: ")
+    if intervalInput in disabled_intervals:
+        print("Temporarily these options are disabled. Please select a different interval.")
+    else:
+        break
 
 interval_timeframes = {
     '1m': '1d - 7d',
