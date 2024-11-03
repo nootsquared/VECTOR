@@ -32,21 +32,24 @@ timeFrameInput = input("time frame: ")
 
 tkf.tickerFetch(tickerInput, timeFrameInput, intervalInput)
 
-csv_file = f'{tickerInput}_hist.csv'
-csv_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "StockAnalysis", csv_file)
-df = pd.read_csv(csv_file)
+# Change the first column head from 'Datetime' to 'Date' if it is 'Datetime'
+csv_file_path = f'{tickerInput}_hist.csv'
+csv_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "StockAnalysis", csv_file_path)
+df = pd.read_csv(csv_file_path)
+
+if df.columns[0] == 'Datetime':
+    df.rename(columns={'Datetime': 'Date'}, inplace=True)
+    df.to_csv(csv_file_path, index=False)
+
+# Reload the CSV file after renaming the column
+df = pd.read_csv(csv_file_path)
 
 if len(df) < 3:
     raise ValueError("CSV file does not contain enough entries to determine the start and end dates.")
 
-if intervalInput not in ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"]:
-    start_date = df.iloc[3]['Date']
-    end_date = df.iloc[-1]['Date']
-else:
-    start_date = df.iloc[3]['Datetime']
-    end_date = df.iloc[-1]['Datetime']
+start_date = df.iloc[3]['Date']
+end_date = df.iloc[-1]['Date']
 
 # Import the function here to avoid circular import
 import StockAnalysis.lstmModelFunc as lmf
-# lmf.train_lstm_model(csv_file, start_date, end_date, intervalInput, window_size=3, learning_rate=0.001, epochs=100, model_save_path='lstm_model.h5')
-lmf.train_and_plot_lstm(f"G:\\Github\\VECTOR\\StockAnalysis\\{tickerInput}_hist.csv", '2023-11-07', '2024-11-01', window_size=3, learning_rate=0.001, epochs=500)
+lmf.train_and_plot_lstm(f"G:\\Github\\VECTOR\\StockAnalysis\\{tickerInput}_hist.csv", start_date, end_date, window_size=3, learning_rate=0.001, epochs=500)
