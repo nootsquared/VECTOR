@@ -6,11 +6,13 @@ import os
 
 from keras import Sequential, optimizers, layers
 from tensorflow.keras.optimizers import Adam
-
 from copy import deepcopy
 
 def str_to_datetime(s):
-    return pd.to_datetime(s)
+    date_part = s.split(" ")[0]
+    split = date_part.split("-")
+    year, month, day = int(split[0]), int(split[1]), int(split[2])
+    return datetime.datetime(year=year, month=month, day=day).date()
 
 def df_to_windowed_df(dataframe, first_date_str, last_date_str, n=3):
     first_date = str_to_datetime(first_date_str)
@@ -59,15 +61,12 @@ def windowed_df_to_date_X_y(windowed_dataframe):
 
     return dates, X.astype(np.float32), Y.astype(np.float32)
 
-def train_lstm_model(csv_file, first_date_str, last_date_str, window_size=3, learning_rate=0.001, epochs=100, model_save_path='lstm_model.h5'):
-    
-    if not os.path.isfile(csv_file):
-        raise FileNotFoundError(f"CSV file '{csv_file}' not found in the current directory.")
-
+def train_and_plot_lstm(csv_file, first_date_str, last_date_str, window_size=3, learning_rate=0.001, epochs=100):
     df = pd.read_csv(csv_file)
-    df = df[["Datetime", "Close"]]
-    df["Datetime"] = df["Datetime"].apply(str_to_datetime)
-    df.index = df.pop("Datetime")
+    df = df[["Date", "Close"]]
+
+    df["Date"] = df["Date"].apply(str_to_datetime)
+    df.index = df.pop("Date")
 
     windowed_df = df_to_windowed_df(df, first_date_str, last_date_str, n=window_size)
     dates, X, Y = windowed_df_to_date_X_y(windowed_df)
@@ -92,5 +91,19 @@ def train_lstm_model(csv_file, first_date_str, last_date_str, window_size=3, lea
 
     model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs)
 
-    model.save(model_save_path)
-    print(f"Model saved to {model_save_path}")
+    train_predictions = model.predict(X_train).flatten()
+    val_predictions = model.predict(X_val).flatten()
+    test_predictions = model.predict(X_test).flatten()
+
+    plt.figure(figsize=(14, 7))
+    plt.plot(dates_train, train_predictions, label='Training Predictions')
+    plt.plot(dates_train, y_train, label='Training Observations')
+    plt.plot(dates_val, val_predictions, label='Validation Predictions')
+    plt.plot(dates_val, y_val, label='Validation Observations')
+    plt.plot(dates_test, test_predictions, label='Testing Predictions')
+    plt.plot(dates_test, y_test, label='Testing Observations')
+    plt.legend()
+    plt.show()
+
+# Example of calling the function
+#train_and_plot_lstm("G:\\Github\\VECTOR\\StockAnalysis\\NVDA_hist.csv", '2023-11-07', '2024-11-01', window_size=3, learning_rate=0.001, epochs=100)
