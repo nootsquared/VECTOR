@@ -7,5 +7,3 @@ def tickerFetch(tickerFetch, periodI, interval):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     csv_file_path = os.path.join(script_dir, f'{tickerFetch}_hist.csv')
     historical_data.to_csv(csv_file_path)
-
-tickerFetch("NVDA", "1y", "1d")

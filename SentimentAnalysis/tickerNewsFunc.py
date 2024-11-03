@@ -48,7 +48,7 @@ def open_for_analysis(article_text):
     else:
         return 0
 
-def get_stock_sentiment(ticker, start_date, end_date):
+def get_stock_sentiment(ticker):
     stock = finvizfinance(ticker)
     stock_fundament = stock.ticker_fundament()
     company_name = stock_fundament.get('Company', None)
@@ -75,44 +75,42 @@ def get_stock_sentiment(ticker, start_date, end_date):
         writer = csv.DictWriter(csvfile, fieldnames=fieldNames)
         writer.writeheader()
         for index, row in news_df.iterrows():
-            article_date = datetime.strptime(str(row['Date']), '%Y-%m-%d %H:%M:%S').date()
-            if start_date <= article_date <= end_date:
-                link = row['Link']
-                content = fetch_content(link)
-                content_length = len(content)
+            link = row['Link']
+            content = fetch_content(link)
+            content_length = len(content)
+            
+            if content_length == 0:
+                continue
+            
+            print(f"Fetching content from: {link}")
+            print(f"Content length: {content_length} characters")
+            
+            content_with_context = content
+            
+            sentiment_score = open_for_analysis(content_with_context)
+            
+            if sentiment_score != 0:
+                if datetime.strptime(str(row['Date']), '%Y-%m-%d %H:%M:%S').date() == datetime.today().date():
+                    print("This is a today's article.")
+                    total_sentiment_score += sentiment_score * todayWeight
+                    num_articles += todayWeight
+                else:
+                    total_sentiment_score += sentiment_score
+                    num_articles += 1
+            
+                writer.writerow({
+                    'Category': 'news',
+                    'Date': row['Date'].strftime('%Y-%m-%d %H:%M:%S'),
+                    'Title': row['Title'],
+                    'Source': row['Source'],
+                    'Link': row['Link'],
+                    'Content': content_with_context,
+                    'Sentiment': sentiment_score
+                })
+            
+                print(f"Sentiment score for article: {sentiment_score}")
+                print(f"Finished processing link: {link}\n")
                 
-                if content_length == 0:
-                    continue
-                
-                print(f"Fetching content from: {link}")
-                print(f"Content length: {content_length} characters")
-                
-                content_with_context = content
-                
-                sentiment_score = open_for_analysis(content_with_context)
-                
-                if sentiment_score != 0:
-                    if article_date == datetime.today().date():
-                        print("This is a today's article.")
-                        total_sentiment_score += sentiment_score * todayWeight
-                        num_articles += todayWeight
-                    else:
-                        total_sentiment_score += sentiment_score
-                        num_articles += 1
-                
-                    writer.writerow({
-                        'Category': 'news',
-                        'Date': row['Date'].strftime('%Y-%m-%d %H:%M:%S'),
-                        'Title': row['Title'],
-                        'Source': row['Source'],
-                        'Link': row['Link'],
-                        'Content': content_with_context,
-                        'Sentiment': sentiment_score
-                    })
-                
-                    print(f"Sentiment score for article: {sentiment_score}")
-                    print(f"Finished processing link: {link}\n")
-
     if num_articles > 0:
         avg_sentiment_score = total_sentiment_score / num_articles
     else:
@@ -122,7 +120,5 @@ def get_stock_sentiment(ticker, start_date, end_date):
     return int(avg_sentiment_score)
 
 # Example usage:
-# start_date = datetime(2023, 11, 1)
-# end_date = datetime(2023, 11, 2)
-# sentiment_score = get_stock_sentiment("AAPL", start_date, end_date)
+# sentiment_score = get_stock_sentiment("AAPL")
 # print(f"Sentiment Score: {sentiment_score}")
