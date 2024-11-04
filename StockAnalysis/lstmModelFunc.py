@@ -156,6 +156,10 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
         elif extrapolated_df['RSI'].iloc[i] < 30 or extrapolated_df['Close'].iloc[i] < extrapolated_df['Lower Band'].iloc[i]:
             extrapolated_predictions[i] = extrapolated_df['Rolling Mean'].iloc[i]
 
+        # Ensure predictions do not drop to zero
+        if extrapolated_predictions[i] < 0:
+            extrapolated_predictions[i] = extrapolated_df['Rolling Mean'].iloc[i]
+
     plt.plot(extrapolated_dates, extrapolated_predictions, label='Adjusted Extrapolated Predictions', linestyle='dashed')
 
     predicted_dates = []
