@@ -2,17 +2,20 @@ import StockAnalysis.tickerFetch as tkf
 import pandas as pd
 import os
 
-#ERRORS: WHEN 1m and 5d, the data is "insufficient" (only 5 data points??) -> looking at date only and not time?
-#ERRORS: When I have 15m for AMZN, it has a FLAT LINE??
-#are boll bands calculated using real or artificial data? calculate boll bands artificially for the extrapolated data
+#TODO:
+#1. Check how random set bias is being calculated and make sure it is modular so different things can add on more weight to pos or neg random scale
+#2. Check if boll bands are calculated correctly for extrapolated data
+#3. Check if RSI and sentiment are being used correctly on the random bias calculation
+#4. When you select 1m and 5d, it says insufficient data (Might only be looking at the date for the previous 3 calculations)
+#5. When you select 15m for AMZN, it has a flat line - not sure?
 
-tickerInput = input("ticker: ")
+tickerInput = input("ENTER YOUR DESIRED TICKER SYMBOL: ")
 possible_intervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
 disabled_intervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h']
 
 while True:
     print(f"Possible interval values: {possible_intervals}")
-    intervalInput = input("interval: ")
+    intervalInput = input("ENTER DESIRED INTERVAL: ")
     if intervalInput in disabled_intervals:
         print("Temporarily these options are disabled. Please select a different interval.")
     else:
@@ -39,7 +42,7 @@ if intervalInput in interval_timeframes:
 else:
     print("Invalid interval selected.")
 
-timeFrameInput = input("time frame: ")
+timeFrameInput = input("ENTER YOUR DESIRED TIME FRAME: ")
 
 tkf.tickerFetch(tickerInput, timeFrameInput, intervalInput)
 
