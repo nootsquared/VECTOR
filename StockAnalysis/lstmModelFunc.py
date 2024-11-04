@@ -74,7 +74,7 @@ def calculate_bollinger_bands(data, window=20, num_std_dev=2):
     lower_band = rolling_mean - (rolling_std * num_std_dev)
     return rolling_mean, upper_band, lower_band
 
-def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_size=3, learning_rate=0.001, epochs=100, sentiment_multiplier=1):
+def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_size=3, learning_rate=0.001, epochs=200, sentiment_multiplier=1):
     df = pd.read_csv(csv_file)
     df = df[["Date", "Close"]]
 
@@ -156,7 +156,6 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
         elif extrapolated_df['RSI'].iloc[i] < 30 or extrapolated_df['Close'].iloc[i] < extrapolated_df['Lower Band'].iloc[i]:
             extrapolated_predictions[i] = extrapolated_df['Rolling Mean'].iloc[i]
 
-        # Ensure predictions do not drop to zero
         if extrapolated_predictions[i] < 0:
             extrapolated_predictions[i] = extrapolated_df['Rolling Mean'].iloc[i]
 
