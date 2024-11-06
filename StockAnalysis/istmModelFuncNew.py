@@ -7,9 +7,11 @@ import os
 from keras import Sequential, optimizers, layers
 from tensorflow.keras.optimizers import Adam
 from copy import deepcopy
-from SentimentAnalysis.tickerNewsFunc import get_stock_sentiment
+from SentimentAnalysis.tickerNewsFunc import get_stock_sentiment, get_stock_weights
 
 from randIntBias import select_random_integer
+
+from randBias import setIntervals, changeWeightCoeff, setWeightCoeff, changeSpreadCoeff, setSpreadCoeff, getRandomNumberFromArray
 
 def str_to_datetime(s):
     date_part = s.split(" ")[0]
@@ -110,12 +112,26 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
 
     # Calculate the change intervals (all change values), then place them into an array (negative values are half and positive values are half)
     
+    # Create extrapolated_dates and extrapolated_predictions arrays
     extrapolated_dates = []
     extrapolated_predictions = []
 
+    # Create local variables for the weight and spread coefficients
+    localWeightCoeff = 0.0
+    localSpreadCoeff = 4
+
     # Set default weights using setWeightCoeff(0.0) and setSpreadCoeff(4)
+    setWeightCoeff(localWeightCoeff)
+    setSpreadCoeff(localSpreadCoeff)
+
     # Get the sentiment of the stock
+    sentiment = get_stock_sentiment(ticker)
+    sentimentWeight = get_stock_weights(sentiment)
+
     # Use the sentiment of the stock to change the weights using changeWeightCoeff()
+    localWeightCoeff += sentimentWeight
+    setWeightCoeff(localWeightCoeff)
+    
     # For the length of the dates_test array (and for each i in the rage of dates):
         # Calculate the RSI and the Bollinger Bands limits, and other indicators
         # Have a formula in a function that calculates all of these and assigns each a weights value, and calculates the total weight change for the factors

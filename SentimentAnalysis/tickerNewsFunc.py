@@ -125,6 +125,14 @@ def get_stock_sentiment(ticker):
     print(f"Skipped links: {skipped_links}")
     return int(avg_sentiment_score)
 
+def get_stock_weights(sentiment_score, max_weight=4):
+    if sentiment_score <= 0:
+        return 0
+    elif sentiment_score >= 100:
+        return max_weight
+    else:
+        return (sentiment_score / 100) * max_weight
+
 # Example usage:
 # sentiment_score = get_stock_sentiment("AAPL")
 # print(f"Sentiment Score: {sentiment_score}")
