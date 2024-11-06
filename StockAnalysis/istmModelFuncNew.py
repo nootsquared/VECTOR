@@ -110,8 +110,14 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
 
     model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs)
 
+    train_predictions = model.predict(X_train).flatten()
+    val_predictions = model.predict(X_val).flatten()
+    test_predictions = model.predict(X_test).flatten()
+
     # Calculate the change intervals (all change values), then place them into an array (negative values are half and positive values are half)
-    
+    changes = df['Close'].diff().dropna().to_numpy()
+    changes_sorted = np.sort(changes)
+
     # Create extrapolated_dates and extrapolated_predictions arrays
     extrapolated_dates = []
     extrapolated_predictions = []
@@ -138,6 +144,13 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
         # Use the total weight change to change the weights using changeWeightCoeff()
         # Generate a random integer between the change array created above
         # Add that (randomly generated change) to the current price and add that to the array of values
+
+    for i in range(len(dates_test)): # add the interval I need inside the dates_test area
+        if i < 3:
+            next_prediction = test_predictions[i]
+        else:
+            
+
 
     # Bollinger Bands, RSI, RESEARCH OTHERS WHICH HAVE A SIGNIFICANT IMPACT ON STOCK PRICES AND CAN BE CALCULATED RELITIVELY
 
