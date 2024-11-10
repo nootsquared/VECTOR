@@ -152,5 +152,4 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
             
 
 
-    # Bollinger Bands, RSI, RESEARCH OTHERS WHICH HAVE A SIGNIFICANT IMPACT ON STOCK PRICES AND CAN BE CALCULATED RELITIVELY
-
+    # Bollinger Bands, Fibbonacci Retracement, Stochastic Oscillator, Fractals, ADX, Parabolic SAR, Ichimoku Cloud
