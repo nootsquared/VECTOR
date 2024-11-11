@@ -149,7 +149,5 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
         if i < 3:
             next_prediction = test_predictions[i]
         else:
-            
+        
 
-
-    # Bollinger Bands, Fibbonacci Retracement, Stochastic Oscillator, Fractals, ADX, Parabolic SAR, Ichimoku Cloud

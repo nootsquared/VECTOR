@@ -65,5 +65,5 @@ end_date = df.iloc[-1]['Date']
 if df.empty or len(df) < 3:
     raise ValueError("Insufficient data fetched for the given interval and time frame.")
 
-import StockAnalysis.lstmModelFunc as lmf
+import StockAnalysis.istmModelFuncNew as lmf
 lmf.train_and_plot_lstm(f"G:\\Github\\VECTOR\\StockAnalysis\\{tickerInput}_hist.csv", start_date, end_date, window_size=3, learning_rate=0.001, epochs=200, ticker=tickerInput)
