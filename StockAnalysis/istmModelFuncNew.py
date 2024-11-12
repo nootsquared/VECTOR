@@ -11,6 +11,8 @@ from SentimentAnalysis.tickerNewsFunc import get_stock_sentiment, get_stock_weig
 
 from randBias import setIntervals, changeWeightCoeff, setWeightCoeff, changeSpreadCoeff, setSpreadCoeff, getRandomNumberFromArray
 
+from middleMan import MiddleMan
+
 def str_to_datetime(s):
     date_part = s.split(" ")[0]
     split = date_part.split("-")
@@ -86,6 +88,10 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
     df['RSI'] = calculate_rsi(df['Close'])
     df['Rolling Mean'], df['Upper Band'], df['Lower Band'] = calculate_bollinger_bands(df['Close'])
 
+    middle_man = MiddleMan(df, mode='knownPrediction')
+    middle_man.set_global_dates(window_size, 7)
+    data_points, full_set = middle_man.get_data_points()
+
     windowed_df = df_to_windowed_df(df, first_date_str, last_date_str, n=window_size)
     dates, X, Y = windowed_df_to_date_X_y(windowed_df)
 
@@ -93,7 +99,7 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
     q_90 = int(len(dates) * .9)
 
     dates_train, X_train, y_train = dates[:q_80], X[:q_80], Y[:q_80]
-    dates_val, X_val, y_val = dates[q_80:q_90], X[q_80:q_90], Y[q_80:q_90]
+    dates_val, X_val, y_val = dates[q_80:q_90], X[q_80:q_90], Y[:q_80]
     dates_test, X_test, y_test = dates[q_90:], X[q_90:], Y[q_90:]
 
     model = Sequential([layers.Input((window_size, 1)),
@@ -130,16 +136,15 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
     localWeightCoeff += sentimentWeight
     setWeightCoeff(localWeightCoeff)
     
-    # For the length of the dates_test array (and for each i in the rage of dates):
-        # Calculate the RSI and the Bollinger Bands limits, and other indicators
-        # Have a formula in a function that calculates all of these and assigns each a weights value, and calculates the total weight change for the factors
-        # Use the total weight change to change the weights using changeWeightCoeff()
-        # Generate a random integer between the change array created above
-        # Add that (randomly generated change) to the current price and add that to the array of values
-
-    for i in range(len(dates_test)): # add the interval I need inside the dates_test area
+    for i in range(len(dates_test)):
         if i < 3:
             next_prediction = test_predictions[i]
         else:
-        
+            # Calculate the RSI and the Bollinger Bands limits, and other indicators
+            # Have a formula in a function that calculates all of these and assigns each a weights value, and calculates the total weight change for the factors
+            # Use the total weight change to change the weights using changeWeightCoeff()
+            # Generate a random integer between the change array created above
+            # Add that (randomly generated change) to the current price and add that to the array of values
+            pass
 
+    # Plotting and other operations remain the same
