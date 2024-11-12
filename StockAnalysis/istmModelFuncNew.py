@@ -9,8 +9,6 @@ from tensorflow.keras.optimizers import Adam
 from copy import deepcopy
 from SentimentAnalysis.tickerNewsFunc import get_stock_sentiment, get_stock_weights
 
-from randIntBias import select_random_integer
-
 from randBias import setIntervals, changeWeightCoeff, setWeightCoeff, changeSpreadCoeff, setSpreadCoeff, getRandomNumberFromArray
 
 def str_to_datetime(s):
@@ -114,27 +112,21 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
     val_predictions = model.predict(X_val).flatten()
     test_predictions = model.predict(X_test).flatten()
 
-    # Calculate the change intervals (all change values), then place them into an array (negative values are half and positive values are half)
     changes = df['Close'].diff().dropna().to_numpy()
     changes_sorted = np.sort(changes)
 
-    # Create extrapolated_dates and extrapolated_predictions arrays
     extrapolated_dates = []
     extrapolated_predictions = []
 
-    # Create local variables for the weight and spread coefficients
     localWeightCoeff = 0.0
     localSpreadCoeff = 4
 
-    # Set default weights using setWeightCoeff(0.0) and setSpreadCoeff(4)
     setWeightCoeff(localWeightCoeff)
     setSpreadCoeff(localSpreadCoeff)
 
-    # Get the sentiment of the stock
     sentiment = get_stock_sentiment(ticker)
     sentimentWeight = get_stock_weights(sentiment)
 
-    # Use the sentiment of the stock to change the weights using changeWeightCoeff()
     localWeightCoeff += sentimentWeight
     setWeightCoeff(localWeightCoeff)
     
