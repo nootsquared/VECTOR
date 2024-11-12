@@ -63,20 +63,20 @@ def windowed_df_to_date_X_y(windowed_dataframe):
 
     return dates, X.astype(np.float32), Y.astype(np.float32)
 
-def calculate_rsi(data, window=14):
-    delta = data.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
-    rs = gain / loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
+# def calculate_rsi(data, window=14):
+#     delta = data.diff()
+#     gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+#     loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+#     rs = gain / loss
+#     rsi = 100 - (100 / (1 + rs))
+#     return rsi
 
-def calculate_bollinger_bands(data, window=20, num_std_dev=2):
-    rolling_mean = data.rolling(window=window).mean()
-    rolling_std = data.rolling(window=window).std()
-    upper_band = rolling_mean + (rolling_std * num_std_dev)
-    lower_band = rolling_mean - (rolling_std * num_std_dev)
-    return rolling_mean, upper_band, lower_band
+# def calculate_bollinger_bands(data, window=20, num_std_dev=2):
+#     rolling_mean = data.rolling(window=window).mean()
+#     rolling_std = data.rolling(window=window).std()
+#     upper_band = rolling_mean + (rolling_std * num_std_dev)
+#     lower_band = rolling_mean - (rolling_std * num_std_dev)
+#     return rolling_mean, upper_band, lower_band
 
 def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_size=3, learning_rate=0.001, epochs=200):
     df = pd.read_csv(csv_file)
@@ -85,8 +85,8 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
     df["Date"] = df["Date"].apply(str_to_datetime)
     df.index = df.pop("Date")
 
-    df['RSI'] = calculate_rsi(df['Close'])
-    df['Rolling Mean'], df['Upper Band'], df['Lower Band'] = calculate_bollinger_bands(df['Close'])
+    # df['RSI'] = calculate_rsi(df['Close'])
+    # df['Rolling Mean'], df['Upper Band'], df['Lower Band'] = calculate_bollinger_bands(df['Close'])
 
     middle_man = MiddleMan(df, mode='knownPrediction')
     middle_man.set_global_dates(window_size, 7)
