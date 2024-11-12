@@ -140,11 +140,4 @@ def train_and_plot_lstm(csv_file, first_date_str, last_date_str, ticker, window_
         if i < 3:
             next_prediction = test_predictions[i]
         else:
-            # Calculate the RSI and the Bollinger Bands limits, and other indicators
-            # Have a formula in a function that calculates all of these and assigns each a weights value, and calculates the total weight change for the factors
-            # Use the total weight change to change the weights using changeWeightCoeff()
-            # Generate a random integer between the change array created above
-            # Add that (randomly generated change) to the current price and add that to the array of values
             pass
-
-    # Plotting and other operations remain the same

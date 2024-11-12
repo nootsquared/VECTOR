@@ -8,6 +8,7 @@ import os
 #3. Check if RSI and sentiment are being used correctly on the random bias calculation
 #4. When you select 1m and 5d, it says insufficient data (Might only be looking at the date for the previous 3 calculations)
 #5. When you select 15m for AMZN, it has a flat line - not sure?
+#6. Improve actual prediction using model trained on larger dataset
 
 tickerInput = input("ENTER YOUR DESIRED TICKER SYMBOL: ")
 possible_intervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
